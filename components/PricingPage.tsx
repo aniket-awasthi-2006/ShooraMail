@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Zap, Shield, Globe } from 'lucide-react';
 import { View, ThemeMode } from '../App';
+import { LogoBlack, LogoWhite } from './Logo';
 
 const MotionDiv = motion.div as any;
 
@@ -16,16 +16,39 @@ const PricingCard: React.FC<{
   themeMode: ThemeMode;
 }> = ({ title, price, description, features, recommended, onSelect, themeMode }) => {
   const isLight = themeMode === 'light';
-  const isContrast = themeMode === 'contrast';
+  const isColored = themeMode === 'colored';
+  const isDark = themeMode === 'dark';
   
   // Card specific themes
-  const cardStyle = recommended 
-    ? (isLight ? 'bg-black text-white border-black' : 'bg-white text-black border-white') 
-    : (isLight ? 'bg-white text-black border-gray-200' : isContrast ? 'bg-black text-white border-white' : 'bg-[#131416] text-white border-[#25282B]');
+  let cardStyle = "";
+  let btnStyle = "";
+  let checkColor = "";
 
-  const btnStyle = recommended 
-    ? (isLight ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800') 
-    : (isLight ? 'bg-black text-white hover:bg-gray-800' : 'bg-white text-black hover:bg-gray-100');
+  if (recommended) {
+    if (isColored) {
+      cardStyle = "bg-[#2D62ED] text-white border-[#2D62ED]";
+      btnStyle = "bg-white text-[#2D62ED] hover:bg-gray-100";
+      checkColor = "text-white";
+    } else if (isLight) {
+      cardStyle = "bg-black text-white border-black";
+      btnStyle = "bg-white text-black hover:bg-gray-200";
+      checkColor = "text-yellow-400";
+    } else {
+      cardStyle = "bg-white text-black border-white";
+      btnStyle = "bg-black text-white hover:bg-gray-800";
+      checkColor = "text-blue-500";
+    }
+  } else {
+    if (isColored || isLight) {
+      cardStyle = "bg-white text-black border-gray-200";
+      btnStyle = isColored ? "bg-[#2D62ED] text-white hover:bg-blue-700" : "bg-black text-white hover:bg-gray-800";
+      checkColor = isColored ? "text-[#2D62ED]" : "text-black";
+    } else {
+      cardStyle = "bg-[#131416] text-white border-[#25282B]";
+      btnStyle = "bg-white text-black hover:bg-gray-100";
+      checkColor = "text-white";
+    }
+  }
 
   return (
     <MotionDiv
@@ -52,7 +75,7 @@ const PricingCard: React.FC<{
       <div className="flex flex-col gap-4 mt-4">
         {features.map((feature, i) => (
           <div key={i} className="flex items-center gap-3">
-            <Check className={`w-4 h-4 ${recommended ? (isLight ? 'text-yellow-400' : 'text-blue-500') : (isLight ? 'text-black' : 'text-white')}`} />
+            <Check className={`w-4 h-4 ${checkColor}`} />
             <span className="text-sm font-medium">{feature}</span>
           </div>
         ))}
@@ -63,14 +86,36 @@ const PricingCard: React.FC<{
 
 const PricingPage: React.FC<{ onNavigate: (v: View) => void; themeMode: ThemeMode }> = ({ onNavigate, themeMode }) => {
   const isLight = themeMode === 'light';
+  const isColored = themeMode === 'colored';
+  const isDark = themeMode === 'dark';
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
-      <div className="text-center mb-16 flex flex-col items-center gap-4">
-        <h2 className="text-5xl md:text-6xl font-black tracking-tight leading-tight">Simple Pricing.</h2>
-        <p className={`text-lg max-w-xl font-medium transition-colors duration-700 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-          Everything you need to master your emails, for teams of all sizes.
-        </p>
+      <div className="text-center mb-16 flex flex-col items-center gap-6">
+        <div className={`w-14 h-14 p-2.5 rounded-2xl flex items-center justify-center transition-all duration-700 ${
+          isColored ? 'bg-[#2D62ED]/10' : 
+          isLight ? 'bg-black/5' : 
+          'bg-white/10'
+        }`}>
+          {isDark ? (
+            <LogoWhite className="w-full h-full" />
+          ) : (
+            <LogoBlack className="w-full h-full" style={{ fill: isColored ? '#2D62ED' : 'black' }} />
+          )}
+        </div>
+        
+        <div className="flex flex-col gap-4">
+          <h2 className={`text-5xl md:text-6xl font-black tracking-tight leading-tight transition-colors duration-700 ${
+            isColored ? 'text-[#2D62ED]' : 'text-current'
+          }`}>
+            Simple Pricing.
+          </h2>
+          <p className={`text-lg max-w-xl font-medium transition-colors duration-700 ${
+            isDark ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Everything you need to master your emails, for teams of all sizes.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -120,17 +165,17 @@ const PricingPage: React.FC<{ onNavigate: (v: View) => void; themeMode: ThemeMod
 
       <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 text-center pb-24">
         <div className="flex flex-col items-center gap-4">
-          <Zap className="w-10 h-10" />
+          <Zap className={`w-10 h-10 transition-colors duration-700 ${isColored ? 'text-[#2D62ED]' : 'text-current'}`} />
           <h4 className="font-bold">Lightning Fast</h4>
           <p className="text-sm opacity-60">Optimized performance for managing thousands of mails without lag.</p>
         </div>
         <div className="flex flex-col items-center gap-4">
-          <Shield className="w-10 h-10" />
+          <Shield className={`w-10 h-10 transition-colors duration-700 ${isColored ? 'text-[#2D62ED]' : 'text-current'}`} />
           <h4 className="font-bold">Privacy First</h4>
           <p className="text-sm opacity-60">Zero-knowledge encryption for your sensitive conversations.</p>
         </div>
         <div className="flex flex-col items-center gap-4">
-          <Globe className="w-10 h-10" />
+          <Globe className={`w-10 h-10 transition-colors duration-700 ${isColored ? 'text-[#2D62ED]' : 'text-current'}`} />
           <h4 className="font-bold">Global Sync</h4>
           <p className="text-sm opacity-60">Access your timeline from any device, anywhere in the world.</p>
         </div>

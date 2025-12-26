@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
@@ -15,6 +14,7 @@ const MotionDiv = motion.div as any;
 
 const FloatingIcon: React.FC<FloatingIconProps> = ({ icon: Icon, delay = 0, className = "", themeMode = 'light' }) => {
   const isLight = themeMode === 'light';
+  const isColored = themeMode === 'colored';
 
   return (
     <MotionDiv
@@ -31,7 +31,7 @@ const FloatingIcon: React.FC<FloatingIconProps> = ({ icon: Icon, delay = 0, clas
       <div className={`p-4 rounded-2xl shadow-xl border transition-all duration-700 flex items-center justify-center hover:scale-110 cursor-default ${
         isLight ? 'bg-white border-gray-100 text-gray-800' : 
         themeMode === 'dark' ? 'bg-[#131416] border-[#25282B] text-gray-200' : 
-        'bg-black border-white text-white'
+        'bg-[#2D62ED] border-white/20 text-white shadow-[#2D62ED]/20'
       }`}>
         <Icon className="w-6 h-6" strokeWidth={1.5} />
       </div>
