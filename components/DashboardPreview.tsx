@@ -15,32 +15,27 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
   const isNormalMode = themeMode === 'light' || themeMode === 'colored';
 
   /**
-   * IMPORTANT: Ensure your local folder is named 'assets' (lowercase) 
-   * and contains these exact filenames.
+   * IMPORTANT: Browser resolution works best with root-relative paths.
+   * Ensure your folder is exactly 'assets' and files are 'slide1.png', etc.
    */
-  const displayImages = [
-    "./assets/slide1.png",
-    "./assets/slide2.png",
-    "./assets/slide3.png"
-  ];
-
-  // Robust fallbacks to ensure the UI looks great even if local assets are 404ing
+ 
+  // Cloud fallbacks in case local assets are missing or incorrectly named
   const fallbackImages = [
-    "https://images.unsplash.com/photo-1614028674026-a65e31bfd27c?q=80&w=2000&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2000&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop"
+    "https://lh3.google.com/u/0/d/17RSWmaiTm--DGvU2zx-II-kf6i2RigBj=w1920-h904-iv2?auditContext=prefetch",
+    "https://lh3.google.com/u/0/d/1MwylPt8zAqFvB0ZR7GvAxB6WeCDY5BtM=w1920-h904-iv2?auditContext=prefetch",
+    "https://lh3.google.com/u/0/d/1OAhZP9IYQA3cpenA9sZLDW3w8ubxWZEd=w1264-h904-iv2?auditContext=prefetch"
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % 3);
-    }, 5000); // Slightly longer duration for smoother transition feel
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 
   return (
     <div className="w-full relative group cursor-pointer" onClick={onOpenApp}>
-      {/* Dynamic Theme Glow */}
+      {/* Interactive Glow Effect */}
       <div className={`absolute -inset-10 rounded-[100px] blur-3xl opacity-20 group-hover:opacity-40 transition-all duration-1000 pointer-events-none ${
         isNormalMode ? 'bg-blue-400' : 'bg-indigo-600'
       }`}></div>
@@ -57,42 +52,31 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
           <AnimatePresence mode="popLayout">
             <MotionDiv
               key={index}
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{
-                duration: 1.8,
-                ease: [0.4, 0, 0.2, 1]
-              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
               className="absolute inset-0 w-full h-full"
             >
               <div className="w-full h-full relative">
-                {/* Visual Consistency Overlay */}
                 <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-1000 ${
                   themeMode === 'dark' ? 'bg-black/10' : 'bg-transparent'
                 }`}></div>
 
                 <img
-                  src={displayImages[index]}
-                  alt={`ShooraMail Interface ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-[5000ms] ease-linear group-hover:scale-105"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    // Prevent infinite loop if fallback also fails
-                    if (target.src !== fallbackImages[index]) {
-                      console.warn(`Local asset not found: ${displayImages[index]}. Switching to cloud fallback.`);
-                      target.src = fallbackImages[index];
-                    }
-                  }}
+                  src={fallbackImages[index]}
+                  alt={`Interface View ${index + 1}`}
+                  className="w-full h-full object-cover"
+                 
                 />
 
-                {/* Status Indicator */}
+                {/* Status Badge */}
                 <div className="absolute top-8 left-8 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl">
                   <div className={`w-2 h-2 rounded-full animate-pulse ${
                     index === 0 ? 'bg-blue-400' : index === 1 ? 'bg-indigo-400' : 'bg-emerald-400'
                   }`}></div>
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
-                    {index === 0 ? 'Core Module' : index === 1 ? 'Shadow Layer' : 'Prism View'}
+                    {index === 0 ? 'Main View' : index === 1 ? 'Analytics' : 'Messaging'}
                   </span>
                 </div>
               </div>
@@ -100,7 +84,7 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
           </AnimatePresence>
         </div>
 
-        {/* Progress Timeline */}
+        {/* Dynamic Progress Indicators */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
           {[0, 1, 2].map((i) => (
             <div 
@@ -122,13 +106,13 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
         </div>
       </MotionDiv>
 
-      {/* Floating CTA Overlay */}
+      {/* Hover Call to Action */}
       <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-[11px] font-black tracking-[0.3em] uppercase shadow-2xl z-30 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-700 pointer-events-none whitespace-nowrap ${
         themeMode === 'colored' ? 'bg-[#2D62ED] text-white' : 
         themeMode === 'dark' ? 'bg-white text-black' : 
         'bg-black text-white'
       }`}>
-        Explore Dashboard
+        Launch System
       </div>
     </div>
   );

@@ -95,10 +95,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode }) => {
 
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-700`}>
-      <div className="max-w-[1600px] mx-auto flex">
+      <div className="max-w-[1600px] mx-auto flex h-screen overflow-hidden">
         
-        {/* Sidebar Nav */}
-        <div className={`w-64 h-screen sticky top-0 border-r ${t.border} p-6 hidden xl:flex flex-col gap-8`}>
+        {/* Sidebar Nav - Fixed height to match viewport */}
+        <div className={`w-64 h-full border-r ${t.border} p-6 hidden xl:flex flex-col gap-8`}>
           <div className="flex items-center gap-3 px-2">
             {themeMode === 'dark' ? <LogoWhite className="w-8 h-8" /> : <LogoBlack className="w-8 h-8" style={{ fill: themeMode === 'colored' ? '#2D62ED' : 'black' }} />}
             <span className={`text-xl font-black tracking-tighter ${t.text}`}>Admin</span>
@@ -136,8 +136,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode }) => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 md:p-10 lg:p-12 overflow-hidden">
+        {/* Main Content - No top padding, just internal content margins */}
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
           
           {/* Header Area */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
@@ -163,7 +163,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode }) => {
             <MetricCard icon={Activity} label="Active Sessions" value="8,241" subValue="Stable" theme={t} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
             
             {/* Table Area */}
             <div className={`lg:col-span-2 rounded-[32px] border ${t.border} ${t.card} overflow-hidden shadow-sm transition-all duration-700`}>
