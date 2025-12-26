@@ -143,6 +143,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     setSelectedMail(mail);
   };
 
+  const scrollbarClass = `custom-scrollbar ${themeMode !== 'light' ? 'dark-scrollbar' : ''}`;
+
   return (
     <div className="flex h-screen w-full overflow-hidden font-sans" style={{ backgroundColor: colors.middlePaneBg }}>
       {/* Sidebar - Mobile Slide-over + Desktop Fixed */}
@@ -174,7 +176,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar flex-grow">
+          <div className={`flex flex-col gap-1 overflow-y-auto ${scrollbarClass} flex-grow`}>
             <SidebarItem icon={Mail} label="Inbox" count={1025} active isCollapsed={isCollapsed && !isMobile} colors={colors} />
             <SidebarItem icon={Star} label="Starred" count={97} isCollapsed={isCollapsed && !isMobile} colors={colors} />
             <SidebarItem icon={Send} label="Sent" count={412} isCollapsed={isCollapsed && !isMobile} colors={colors} />
@@ -265,7 +267,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-24">
+        <div className={`flex-1 overflow-y-auto ${scrollbarClass} pb-24`}>
           {MOCK_MESSAGES.map((msg) => (
             <div 
               key={msg.id} 
@@ -319,7 +321,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-12 lg:p-16">
+            <div className={`flex-1 overflow-y-auto p-6 md:p-12 lg:p-16 ${scrollbarClass}`}>
               <div className="max-w-4xl mx-auto">
                 <h1 className="text-3xl md:text-5xl font-black mb-10 tracking-tighter leading-[1.1]" style={{ color: colors.textMain }}>{selectedMail.subject}</h1>
                 
