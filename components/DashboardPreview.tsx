@@ -19,9 +19,9 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
    * and contains these exact filenames.
    */
   const displayImages = [
-    "assets/slide1.png",
-    "assets/slide2.png",
-    "assets/slide3.png"
+    "./assets/slide1.png",
+    "./assets/slide2.png",
+    "./assets/slide3.png"
   ];
 
   // Robust fallbacks to ensure the UI looks great even if local assets are 404ing
