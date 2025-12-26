@@ -6,7 +6,8 @@ import {
   Settings, ArrowLeft, RefreshCw,
   MoreVertical, ShieldCheck, AlertCircle, 
   Clock, Server, Search, Filter, 
-  CheckCircle2, PauseCircle, ChevronRight
+  CheckCircle2, PauseCircle, ChevronRight,
+  Sun, Moon, Palette
 } from 'lucide-react';
 import { View, ThemeMode } from '../App';
 import { LogoBlack, LogoWhite } from './Logo';
@@ -16,6 +17,7 @@ const MotionDiv = motion.div as any;
 interface AdminPageProps {
   onNavigate: (v: View) => void;
   themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
 const THEME_COLORS = {
@@ -81,7 +83,7 @@ const HealthChart: React.FC<{ theme: any }> = ({ theme }) => (
   </div>
 );
 
-const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode }) => {
+const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode, setThemeMode }) => {
   const t = THEME_COLORS[themeMode];
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -92,6 +94,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode }) => {
     { name: 'Sam Wilson', email: 'sam@tech.co', role: 'User', status: 'Active', avatar: 'https://i.pravatar.cc/150?u=sam' },
     { name: 'Elena Vance', email: 'vance@blackmesa.org', role: 'Admin', status: 'Active', avatar: 'https://i.pravatar.cc/150?u=elena' },
   ];
+
+  const getToggleButtonStyles = (btnMode: ThemeMode) => {
+    const isActive = themeMode === btnMode;
+    if (themeMode === 'light') {
+      if (isActive) return { background: '#000000', color: '#ffffff' };
+      return { background: 'transparent', color: '#000000' };
+    }
+    if (themeMode === 'dark') {
+      if (isActive) return { background: '#ffffff', color: '#000000' };
+      return { background: 'transparent', color: '#ffffff' };
+    }
+    if (themeMode === 'colored') {
+      if (isActive) return { background: 'linear-gradient(45deg, #2D62ED, #1E40AF)', color: '#ffffff' };
+      return { background: 'transparent', color: '#2D62ED' };
+    }
+    return { background: 'transparent', color: 'inherit' };
+  };
 
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-700`}>
@@ -125,7 +144,23 @@ const AdminPage: React.FC<AdminPageProps> = ({ onNavigate, themeMode }) => {
             ))}
           </div>
 
-          <div className="mt-auto">
+          <div className="mt-auto flex flex-col gap-4">
+            {/* Theme Toggle Switch */}
+            <div className={`flex items-center gap-1 p-1 rounded-2xl border transition-all duration-700 bg-black/5 dark:bg-white/5`} style={{ borderColor: t.border.split('-')[1] }}>
+               {(['light', 'dark', 'colored'] as ThemeMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setThemeMode(mode)}
+                    className={`p-2 rounded-xl flex-1 flex items-center justify-center transition-all duration-700 ${themeMode === mode ? 'shadow-lg scale-105 opacity-100' : 'opacity-60 hover:opacity-100'}`}
+                    style={getToggleButtonStyles(mode)}
+                  >
+                    {mode === 'light' && <Sun className="w-4 h-4" />}
+                    {mode === 'dark' && <Moon className="w-4 h-4" />}
+                    {mode === 'colored' && <Palette className="w-4 h-4" />}
+                  </button>
+               ))}
+            </div>
+
             <button 
               onClick={() => onNavigate('landing')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold w-full transition-all ${t.muted} hover:bg-black/5 dark:hover:bg-white/5`}

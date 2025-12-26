@@ -91,7 +91,7 @@ const App: React.FC = () => {
       case 'admin':
         return (
           <MotionDiv key="admin" {...pageTransition} className="h-screen w-screen overflow-hidden">
-            <AdminPage onNavigate={navigate} themeMode={themeMode} />
+            <AdminPage onNavigate={navigate} themeMode={themeMode} setThemeMode={setThemeMode} />
           </MotionDiv>
         );
       case 'dashboard':

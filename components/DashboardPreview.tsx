@@ -15,11 +15,16 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
   const isNormalMode = themeMode === 'light' || themeMode === 'colored';
 
   /**
-   * IMPORTANT: Browser resolution works best with root-relative paths.
-   * Ensure your folder is exactly 'assets' and files are 'slide1.png', etc.
+   * IMPORTANT: Local asset paths for ShooraMail slides.
+   * Assumes files exist at /assets/slide1.png, etc.
    */
- 
-  // Cloud fallbacks in case local assets are missing or incorrectly named
+  const localImages = [
+    "assets/slide1.png",
+    "assets/slide2.png",
+    "assets/slide3.png"
+  ];
+
+  // High-fidelity fallbacks to ensure the UI is never broken
   const fallbackImages = [
     "https://lh3.google.com/u/0/d/17RSWmaiTm--DGvU2zx-II-kf6i2RigBj=w1920-h904-iv2?auditContext=prefetch",
     "https://lh3.google.com/u/0/d/1MwylPt8zAqFvB0ZR7GvAxB6WeCDY5BtM=w1920-h904-iv2?auditContext=prefetch",
@@ -29,76 +34,76 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % 3);
-    }, 5000);
+    }, 6000); // 6 seconds per slide for a more relaxed pace
     return () => clearInterval(timer);
   }, []);
 
   return (
     <div className="w-full relative group cursor-pointer" onClick={onOpenApp}>
-      {/* Interactive Glow Effect */}
-      <div className={`absolute -inset-10 rounded-[100px] blur-3xl opacity-20 group-hover:opacity-40 transition-all duration-1000 pointer-events-none ${
-        isNormalMode ? 'bg-blue-400' : 'bg-indigo-600'
+      {/* Background Ambient Glow */}
+      <div className={`absolute -inset-16 rounded-[100px] blur-[120px] opacity-10 group-hover:opacity-25 transition-all duration-1000 pointer-events-none ${
+        isNormalMode ? 'bg-blue-500' : 'bg-indigo-600'
       }`}></div>
 
       <MotionDiv
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className={`relative rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border transition-all duration-700 overflow-hidden flex flex-col aspect-[16/10] backdrop-blur-sm ${
-          isNormalMode ? 'bg-white border-gray-200/60' : 'bg-[#0B0C0D] border-white/5'
+        transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+        className={`relative rounded-[40px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] border transition-all duration-1000 overflow-hidden flex flex-col aspect-[16/10] backdrop-blur-md ${
+          isNormalMode ? 'bg-white/90 border-gray-200/80' : 'bg-[#0B0C0D]/90 border-white/5'
         }`}
       >
         <div className="relative w-full h-full flex-1">
           <AnimatePresence mode="popLayout">
             <MotionDiv
               key={index}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ 
+                duration: 2.5, // Ultra-smooth long transition
+                ease: [0.4, 0, 0.2, 1] 
+              }}
               className="absolute inset-0 w-full h-full"
             >
               <div className="w-full h-full relative">
+                {/* Visual Consistency Filter */}
                 <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-1000 ${
-                  themeMode === 'dark' ? 'bg-black/10' : 'bg-transparent'
+                  themeMode === 'dark' ? 'bg-black/20' : 'bg-transparent'
                 }`}></div>
 
                 <img
-                  src={fallbackImages[index]}
-                  alt={`Interface View ${index + 1}`}
+                  src={localImages[index]}
+                  alt={`ShooraMail Interface Slide ${index + 1}`}
                   className="w-full h-full object-cover"
-                 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('google.com')) {
+                      console.warn(`Local slide ${index + 1} not found. Defaulting to fallback.`);
+                      target.src = fallbackImages[index];
+                    }
+                  }}
                 />
-
-                {/* Status Badge */}
-                <div className="absolute top-8 left-8 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl">
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${
-                    index === 0 ? 'bg-blue-400' : index === 1 ? 'bg-indigo-400' : 'bg-emerald-400'
-                  }`}></div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
-                    {index === 0 ? 'Main View' : index === 1 ? 'Analytics' : 'Messaging'}
-                  </span>
-                </div>
               </div>
             </MotionDiv>
           </AnimatePresence>
         </div>
 
-        {/* Dynamic Progress Indicators */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+        {/* Dynamic Progress Timeline (Bottom) */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-4">
           {[0, 1, 2].map((i) => (
             <div 
               key={i}
-              className={`h-1 rounded-full overflow-hidden transition-all duration-500 ${
-                index === i ? 'w-20 bg-white/30' : 'w-12 bg-white/10'
+              className={`h-1 rounded-full overflow-hidden transition-all duration-700 bg-white/10 ${
+                index === i ? 'w-24' : 'w-8'
               }`}
             >
               {index === i && (
                 <MotionDiv
                   initial={{ width: 0 }}
                   animate={{ width: "100%" }}
-                  transition={{ duration: 5, ease: "linear" }}
-                  className={`h-full ${isNormalMode ? 'bg-black' : 'bg-white'}`}
+                  transition={{ duration: 6, ease: "linear" }}
+                  className={`h-full ${isNormalMode ? 'bg-black/60' : 'bg-white/60'}`}
                 />
               )}
             </div>
@@ -106,13 +111,13 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
         </div>
       </MotionDiv>
 
-      {/* Hover Call to Action */}
-      <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-[11px] font-black tracking-[0.3em] uppercase shadow-2xl z-30 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-700 pointer-events-none whitespace-nowrap ${
+      {/* Floating Exploration Hint */}
+      <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-12 py-5 rounded-full text-[12px] font-black tracking-[0.4em] uppercase shadow-2xl z-30 opacity-0 group-hover:opacity-100 translate-y-6 group-hover:translate-y-0 transition-all duration-1000 pointer-events-none whitespace-nowrap ${
         themeMode === 'colored' ? 'bg-[#2D62ED] text-white' : 
         themeMode === 'dark' ? 'bg-white text-black' : 
         'bg-black text-white'
       }`}>
-        Launch System
+        Launch Full Experience
       </div>
     </div>
   );
