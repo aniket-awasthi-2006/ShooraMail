@@ -3,11 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "npm run build",
-    "preview": "npm run preview"
-  },
+  
   "dependencies": {
     "lucide-react": "^0.562.0",
     "react-dom": "^19.2.3",
