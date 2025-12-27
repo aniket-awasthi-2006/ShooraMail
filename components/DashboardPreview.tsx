@@ -19,9 +19,9 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
    * Assumes files exist at /assets/slide1.png, etc.
    */
   const localImages = [
-    "assets/slide1.png",
-    "assets/slide2.png",
-    "assets/slide3.png"
+    "/components/assets/slide1.png",
+    "/components/assets/slide2.png",
+    "/components/assets/slide3.png"
   ];
 
   // High-fidelity fallbacks to ensure the UI is never broken
@@ -73,8 +73,7 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
                 }`}></div>
 
                 <img
-                  src={localImages[index]}
-                  alt={`ShooraMail Interface Slide ${index + 1}`}
+                  src={localImages[index]}              
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
