@@ -139,6 +139,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
   const colors = THEMES[themeMode];
 
   useEffect(() => {
+    localStorage.setItem('isLoggedIn', 'true');
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
@@ -200,6 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
   };
 
   const confirmLogout = () => {
+    localStorage.removeItem('isLoggedIn');
     if (onLogout) onLogout();
     setIsLogoutWarningOpen(false);
   };

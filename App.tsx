@@ -44,6 +44,15 @@ const App: React.FC = () => {
   const currentTheme = themeStyles[themeMode];
 
   useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const path = window.location.pathname;
+
+    if (isLoggedIn || path === '/Dashboard' || path === '/dashboard') {
+      setView('dashboard');
+    }
+  }, []);
+
+  useEffect(() => {
     if (themeMode === 'light') {
       document.body.className = 'mesh-bg';
       document.body.style.backgroundColor = '#ffffff';
@@ -58,6 +67,11 @@ const App: React.FC = () => {
 
   const navigate = (v: View) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (v === 'dashboard') {
+      window.history.pushState({}, '', '/Dashboard');
+    } else if (v === 'landing') {
+      window.history.pushState({}, '', '/');
+    }
     setView(v);
   };
 
@@ -97,7 +111,7 @@ const App: React.FC = () => {
         return (
           <MotionDiv key="dashboard" {...pageTransition} className="h-screen w-screen overflow-hidden">
             <Dashboard 
-              onLogout={() => setView('landing')} 
+              onLogout={() => navigate('landing')} 
               themeMode={themeMode} 
               setThemeMode={setThemeMode} 
             />
