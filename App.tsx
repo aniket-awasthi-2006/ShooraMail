@@ -9,7 +9,6 @@ import PricingPage from './components/PricingPage';
 import AuthPage from './components/AuthPage';
 import Dashboard from './components/Dashboard';
 import AdminPage from './components/AdminPage';
-import { LogoBlack, LogoWhite } from './components/Logo';
 
 export type View = 'landing' | 'pricing' | 'signin' | 'signup' | 'dashboard' | 'admin';
 export type ThemeMode = 'light' | 'dark' | 'colored';

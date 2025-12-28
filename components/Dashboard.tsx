@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, Search, Star, Send, FileText, Trash2, Mail, 
-  ChevronDown, MoreHorizontal, Reply, Forward, 
-  Plus, Circle, LogOut, Sun, Moon, Palette, ArrowLeft,
-  Settings, Bell, Shield, HelpCircle, Inbox
+  ChevronDown, MoreHorizontal, Reply, Forward,Mails,Pin,
+  Plus, Circle, LogOut, Sun, Moon, Palette, ArrowLeft, X,
+  Settings, Bell, Shield, HelpCircle, Inbox,
+  Clock, Calendar, Archive, AlertCircle, RotateCcw
 } from 'lucide-react';
 import { ThemeMode } from '../App';
 import { LogoBlack, LogoWhite } from './Logo';
@@ -76,23 +77,28 @@ interface Message {
   sender: string;
   subject: string;
   preview: string;
+  body: string;
   date: string;
   unread?: boolean;
   flagged?: boolean;
   categoryColor?: string;
+  category?: string;
   attachments?: boolean;
   avatar: string;
+  folder: 'inbox' | 'sent' | 'drafts' | 'trash' | 'snoozed' | 'scheduled';
+  important?: boolean;
 }
 
 const MOCK_MESSAGES: Message[] = [
-  { id: '1', sender: 'Google', subject: 'Manual Account Verification', preview: 'Hello 7ahang, Your account has been verified successfully. Please review your security settings to ensure everything is up to date.', date: 'June 25', unread: true, categoryColor: '#2D62ED', avatar: 'https://i.pravatar.cc/100?u=google' },
-  { id: '2', sender: 'Medium', subject: "Today's highlights: Design Trends 2024", preview: 'Tint and shade are areas of color theory that many beginners overlook. In this week\'s highlights, we dive deep into...', date: 'June 23', unread: true, categoryColor: '#2D62ED', avatar: 'https://i.pravatar.cc/100?u=medium' },
-  { id: '3', sender: 'Tamas Bunce', subject: 'Work Enquiry - New Project', preview: 'This is Tamas who contacted you on Dribbble regarding the brand identity project. I was wondering if you had time for a quick call next week...', date: 'June 22', categoryColor: '#34A853', attachments: true, avatar: 'https://i.pravatar.cc/100?u=tamas' },
-  { id: '4', sender: 'Slack', subject: "Now's the perfect time to upgrade", preview: "That's okay! If you want to learn more about our new enterprise features, we've attached a full guide below...", date: 'June 19', flagged: true, categoryColor: '#FFB800', avatar: 'https://i.pravatar.cc/100?u=slack' }
+  { id: '1', folder: 'inbox', category: 'promotions', sender: 'Google', subject: 'Manual Account Verification', preview: 'Hello 7ahang, Your account has been verified successfully. Please review your security settings to ensure everything is up to date.', body: 'Hello 7ahang,\n\nYour account has been verified successfully. Please review your security settings to ensure everything is up to date.\n\nBest,\nGoogle Team', date: 'June 25', unread: true, categoryColor: '#2D62ED', avatar: 'https://i.pravatar.cc/100?u=google' },
+  { id: '2', folder: 'inbox', category: 'promotions', sender: 'Medium', subject: "Today's highlights: Design Trends 2024", preview: 'Tint and shade are areas of color theory that many beginners overlook. In this week\'s highlights, we dive deep into...', body: 'Tint and shade are areas of color theory that many beginners overlook. In this week\'s highlights, we dive deep into the nuances of color palettes in modern web design.', date: 'June 23', unread: true, categoryColor: '#2D62ED', avatar: 'https://i.pravatar.cc/100?u=medium' },
+  { id: '3', folder: 'inbox', category: 'work', sender: 'Tamas Bunce', subject: 'Work Enquiry - New Project', preview: 'This is Tamas who contacted you on Dribbble regarding the brand identity project. I was wondering if you had time for a quick call next week...', body: 'Hi,\n\nThis is Tamas who contacted you on Dribbble regarding the brand identity project. I was wondering if you had time for a quick call next week to discuss the details?\n\nThanks, Tamas', date: 'June 22', categoryColor: '#34A853', attachments: true, avatar: 'https://i.pravatar.cc/100?u=tamas' },
+  { id: '4', folder: 'inbox', category: 'personal', sender: 'Slack', subject: "Now's the perfect time to upgrade", preview: "That's okay! If you want to learn more about our new enterprise features, we've attached a full guide below...", body: "That's okay! If you want to learn more about our new enterprise features, we've attached a full guide below. Check out the new pricing plans.", date: 'June 19', flagged: true, categoryColor: '#FFB800', avatar: 'https://i.pravatar.cc/100?u=slack' }
 ];
 
-const SidebarItem: React.FC<{ icon: any; label: string; count?: number; active?: boolean; color?: string; isCollapsed: boolean; colors: ThemeColors }> = ({ icon: Icon, label, count, active, color, isCollapsed, colors }) => (
+const SidebarItem: React.FC<{ icon: any; label: string; count?: number; active?: boolean; color?: string; isCollapsed: boolean; colors: ThemeColors; onClick?: () => void }> = ({ icon: Icon, label, count, active, color, isCollapsed, colors, onClick }) => (
   <div 
+    onClick={onClick}
     className={`flex items-center ${isCollapsed ? 'justify-center w-12 h-12 mx-auto' : 'justify-between px-4 py-2.5'} rounded-xl cursor-pointer transition-all duration-700 ease-in-out group`}
     style={{ backgroundColor: active ? colors.itemActiveBg : 'transparent' }}
   >
@@ -119,10 +125,16 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode }) => {
-  const [selectedMail, setSelectedMail] = useState<Message | null>(MOCK_MESSAGES[0]);
+  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
+  const [selectedMailId, setSelectedMailId] = useState<string | null>(MOCK_MESSAGES[0].id);
+  const [activeFolder, setActiveFolder] = useState<string>('inbox');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
+  const [isLogoutWarningOpen, setIsLogoutWarningOpen] = useState(false);
 
   const colors = THEMES[themeMode];
 
@@ -139,8 +151,73 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const selectedMail = messages.find(m => m.id === selectedMailId) || null;
+
+  const filteredMessages = messages.filter(msg => {
+    let matchesFolder = false;
+    if (activeFolder === 'inbox') matchesFolder = msg.folder === 'inbox' && !!msg.unread;
+    else if (activeFolder === 'starred') matchesFolder = !!msg.flagged;
+    else if (activeFolder === 'snoozed') matchesFolder = msg.folder === 'snoozed';
+    else if (activeFolder === 'important') matchesFolder = !!msg.important;
+    else if (activeFolder === 'sent') matchesFolder = msg.folder === 'sent';
+    else if (activeFolder === 'scheduled') matchesFolder = msg.folder === 'scheduled';
+    else if (activeFolder === 'drafts') matchesFolder = msg.folder === 'drafts';
+    else if (activeFolder === 'all') matchesFolder = msg.folder !== 'trash';
+    else if (activeFolder === 'trash') matchesFolder = msg.folder === 'trash';
+    else if (['work', 'personal', 'promotions'].includes(activeFolder)) matchesFolder = msg.category === activeFolder && msg.folder !== 'trash';
+    
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = 
+      msg.subject.toLowerCase().includes(searchLower) || 
+      msg.sender.toLowerCase().includes(searchLower) ||
+      msg.preview.toLowerCase().includes(searchLower);
+
+    return matchesFolder && matchesSearch;
+  });
+
   const handleSelectMail = (mail: Message) => {
-    setSelectedMail(mail);
+    setSelectedMailId(mail.id);
+    if (mail.unread) {
+      setMessages(prev => prev.map(m => m.id === mail.id ? { ...m, unread: false } : m));
+    }
+  };
+
+  const handleDelete = () => {
+    if (!selectedMail) return;
+    if (selectedMail.folder === 'trash') {
+      setIsDeleteWarningOpen(true);
+    } else {
+      setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, folder: 'trash' } : m));
+      setSelectedMailId(null);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (!selectedMail) return;
+    setMessages(prev => prev.filter(m => m.id !== selectedMail.id));
+    setSelectedMailId(null);
+    setIsDeleteWarningOpen(false);
+  };
+
+  const confirmLogout = () => {
+    if (onLogout) onLogout();
+    setIsLogoutWarningOpen(false);
+  };
+
+  const handleImportant = () => {
+    if (!selectedMail) return;
+    setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, important: !m.important } : m));
+  };
+
+  const handleRestore = () => {
+    if (!selectedMail) return;
+    setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, folder: 'inbox' } : m));
+    setSelectedMailId(null);
+  };
+
+  const handleStar = () => {
+    if (!selectedMail) return;
+    setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, flagged: !m.flagged } : m));
   };
 
   const scrollbarClass = `custom-scrollbar ${themeMode !== 'light' ? 'dark-scrollbar' : ''}`;
@@ -167,6 +244,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
   };
 
   return (
+    <>
     <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-700 ease-in-out`} style={{ backgroundColor: colors.middlePaneBg }}>
       <MotionDiv 
         initial={false}
@@ -182,10 +260,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
           borderColor: colors.border,
         }}
       >
-        <div className="p-6 flex flex-col h-full">
+        <div className="p-4 flex flex-col h-full">
           <div className="flex items-center gap-4 h-12 overflow-hidden mb-8">
-            <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 rounded-xl hidden lg:block hover:bg-black/5 transition-colors duration-700" style={{ color: colors.textMuted }}>
-              <Menu className="w-6 h-6" />
+            <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-4 rounded-xl hidden lg:block hover:bg-black/5 transition-colors duration-700" style={{ color: colors.textMuted }}>
+              <Menu className="w-6 h-6 " />
             </button>
             <button onClick={() => setMobileSidebarOpen(false)} className="p-2 rounded-xl lg:hidden hover:bg-black/5 transition-colors duration-700" style={{ color: colors.textMuted }}>
               <ArrowLeft className="w-6 h-6" />
@@ -197,18 +275,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
           </div>
 
           <div className={`flex flex-col gap-1 overflow-y-auto ${scrollbarClass} flex-grow`}>
-            <SidebarItem icon={Mail} label="Inbox" count={1025} active isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            <SidebarItem icon={Star} label="Starred" count={97} isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            <SidebarItem icon={Send} label="Sent" count={412} isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            <SidebarItem icon={FileText} label="Drafts" count={3} isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            <SidebarItem icon={Trash2} label="Trash" isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            
+            <SidebarItem icon={Inbox} label="Inbox" count={messages.filter(m => m.folder === 'inbox' && m.unread).length || undefined} active={activeFolder === 'inbox'} onClick={() => setActiveFolder('inbox')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Star} label="Starred" count={messages.filter(m => m.flagged).length || undefined} active={activeFolder === 'starred'} onClick={() => setActiveFolder('starred')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Clock} label="Snoozed" count={messages.filter(m => m.folder === 'snoozed').length || undefined} active={activeFolder === 'snoozed'} onClick={() => setActiveFolder('snoozed')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Pin} label="Important" count={messages.filter(m => m.important).length || undefined} active={activeFolder === 'important'} onClick={() => setActiveFolder('important')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Send} label="Sent" count={messages.filter(m => m.folder === 'sent').length || undefined} active={activeFolder === 'sent'} onClick={() => setActiveFolder('sent')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Calendar} label="Scheduled" count={messages.filter(m => m.folder === 'scheduled').length || undefined} active={activeFolder === 'scheduled'} onClick={() => setActiveFolder('scheduled')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={FileText} label="Drafts" count={messages.filter(m => m.folder === 'drafts').length || undefined} active={activeFolder === 'drafts'} onClick={() => setActiveFolder('drafts')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Mails} label="All Mails" count={messages.filter(m => m.folder !== 'trash').length || undefined} active={activeFolder === 'all'} onClick={() => setActiveFolder('all')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Trash2} label="Trash" count={messages.filter(m => m.folder === 'trash').length || undefined} active={activeFolder === 'trash'} onClick={() => setActiveFolder('trash')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+
             {(!isCollapsed || isMobile) && (
               <p className="px-4 mt-8 mb-2 text-[10px] font-black uppercase tracking-widest opacity-40 transition-colors duration-700" style={{ color: colors.textMain }}>Categories</p>
             )}
-            <SidebarItem icon={Circle} label="Work" color="#34A853" isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            <SidebarItem icon={Circle} label="Personal" color="#FFB800" isCollapsed={isCollapsed && !isMobile} colors={colors} />
-            <SidebarItem icon={Circle} label="Promotions" color="#2D62ED" isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Circle} label="Work" color="#34A853" active={activeFolder === 'work'} onClick={() => setActiveFolder('work')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Circle} label="Personal" color="#FFB800" active={activeFolder === 'personal'} onClick={() => setActiveFolder('personal')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+            <SidebarItem icon={Circle} label="Promotions" color="#2D62ED" active={activeFolder === 'promotions'} onClick={() => setActiveFolder('promotions')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
           </div>
 
           <div className="flex flex-col gap-4 pt-4 border-t mt-auto transition-colors duration-700" style={{ borderColor: colors.border }}>
@@ -228,8 +310,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
             </div>
 
             <div 
-              onClick={onLogout}
-              className={`border p-3 rounded-[20px] flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all duration-700 ${isCollapsed && !isMobile ? 'justify-center p-2' : ''}`} 
+              onClick={() => setIsLogoutWarningOpen(true)}
+              className={`border p-1 rounded-[15px] flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all duration-700 ${isCollapsed && !isMobile ? 'justify-center p-2' : ''}`} 
               style={{ backgroundColor: colors.itemActiveBg, borderColor: colors.border }}
             >
               <img src="https://i.pravatar.cc/100?u=7ahang" className="w-10 h-10 rounded-xl flex-shrink-0" />
@@ -259,19 +341,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
         <div className="p-4 md:p-6 border-b z-10 sticky top-0 transition-all duration-700 ease-in-out" style={{ backgroundColor: colors.middlePaneBg, borderColor: colors.border }}>
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <div className="flex items-center gap-3 lg:hidden">
-              <button onClick={() => setMobileSidebarOpen(true)} className="p-2 hover:bg-black/5 rounded-lg transition-colors duration-700">
+              <button onClick={() => setMobileSidebarOpen(true)} className="p-2 hover:bg-black/5 rounded-lg transition-colors duration-700" style={{ color: colors.textMain }}>
                 <Menu className="w-6 h-6 transition-colors duration-700" style={{ color: colors.textMain }} />
               </button>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tighter transition-colors duration-700" style={{ color: colors.textMain }}>Inbox</h2>
-            <button className={`p-2 rounded-full transition-all duration-700 ${themeMode === 'colored' ? 'bg-[#2D62ED]/10 text-[#2D62ED]' : 'hover:bg-black/5 text-current'}`}>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tighter transition-colors duration-700 capitalize" style={{ color: colors.textMain }}>{activeFolder}</h2>
+            <button onClick={() => setIsComposeOpen(true)} className={`p-2 rounded-full transition-all duration-700 ${themeMode === 'colored' ? 'bg-[#2D62ED]/10 text-[#2D62ED]' : 'hover:bg-black/5 text-current'}`} style={{ color: colors.textMain }}>
               <Plus className="w-6 h-6" />
             </button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-700" style={{ color: colors.textMuted }} />
             <input 
-              type="text" 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conversations..." 
               className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none transition-all duration-700 focus:ring-2"
               style={{ backgroundColor: colors.inputBg, color: colors.textMain } as any}
@@ -280,15 +364,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
         </div>
         
         <div className={`flex-1 overflow-y-auto ${scrollbarClass} pb-24 transition-colors duration-700`}>
-          {MOCK_MESSAGES.map((msg) => (
+          {filteredMessages.map((msg) => (
             <div 
               key={msg.id} 
               onClick={() => handleSelectMail(msg)}
               className="px-6 py-5 border-b cursor-pointer transition-all duration-700"
               style={{ 
-                backgroundColor: selectedMail?.id === msg.id ? colors.primary + '0D' : 'transparent',
+                backgroundColor: selectedMailId === msg.id ? colors.primary + '0D' : 'transparent',
                 borderColor: colors.border,
-                borderLeft: selectedMail?.id === msg.id ? `4px solid ${colors.primary}` : '4px solid transparent'
+                borderLeft: selectedMailId === msg.id ? `4px solid ${colors.primary}` : '4px solid transparent'
               }}
             >
               <div className="flex justify-between items-start mb-1">
@@ -314,14 +398,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
           <>
             <div className="p-4 border-b flex items-center justify-between sticky top-0 z-20 backdrop-blur-md transition-all duration-700" style={{ backgroundColor: colors.rightPaneBg + 'CC', borderColor: colors.border }}>
               <div className="flex items-center gap-2">
-                <button onClick={() => setSelectedMail(null)} className="p-2 rounded-lg lg:hidden hover:bg-black/5 transition-colors duration-700">
+                <button onClick={() => setSelectedMailId(null)} className="p-2 rounded-lg lg:hidden hover:bg-black/5 transition-colors duration-700">
                   <ArrowLeft className="w-6 h-6 transition-colors duration-700" style={{ color: colors.textMain }} />
                 </button>
                 <div className="hidden sm:flex gap-1">
-                  <button className={`p-2 rounded-lg hover:bg-black/5 transition-colors duration-700 ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} title="Reply"><Reply className="w-5 h-5 opacity-60" /></button>
-                  <button className={`p-2 rounded-lg hover:bg-black/5 transition-colors duration-700 ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} title="Forward"><Forward className="w-5 h-5 opacity-60" /></button>
-                  <button className="p-2 rounded-lg hover:bg-black/5 transition-colors duration-700" title="Star"><Star className={`w-5 h-5 transition-all duration-700 ${selectedMail.flagged ? 'fill-yellow-400 text-yellow-400 opacity-100' : 'opacity-60'} ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} /></button>
-                  <button className="p-2 rounded-lg hover:bg-black/5 transition-colors duration-700" title="Delete"><Trash2 className="w-5 h-5 opacity-60 text-red-400" /></button>
+                  {selectedMail.folder === 'trash' ? (
+                    <button onClick={handleRestore} className={`p-2 rounded-lg hover:bg-black/5 transition-colors duration-700 ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} title="Restore"><RotateCcw className="w-5 h-5 opacity-60" /></button>
+                  ) : (
+                    <>
+                      <button className={`p-2 rounded-lg hover:bg-black/5 transition-colors duration-700 ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} title="Reply"><Reply className="w-5 h-5 opacity-60" /></button>
+                      <button className={`p-2 rounded-lg hover:bg-black/5 transition-colors duration-700 ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} title="Forward"><Forward className="w-5 h-5 opacity-60" /></button>
+                      <button onClick={handleImportant} className="p-2 rounded-lg hover:bg-black/5 transition-colors duration-700" title="Mark as Important"><Pin className={`w-5 h-5 transition-all duration-700 ${selectedMail.important ? 'fill-red-500 text-red-500 opacity-100' : 'opacity-60'} ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} /></button>
+                      <button onClick={handleStar} className="p-2 rounded-lg hover:bg-black/5 transition-colors duration-700" title="Star"><Star className={`w-5 h-5 transition-all duration-700 ${selectedMail.flagged ? 'fill-yellow-400 text-yellow-400 opacity-100' : 'opacity-60'} ${themeMode === 'colored' ? 'text-[#2D62ED]' : ''}`} /></button>
+                    </>
+                  )}
+                  <button onClick={handleDelete} className="p-2 rounded-lg hover:bg-black/5 transition-colors duration-700" title={selectedMail.folder === 'trash' ? "Delete Permanently" : "Delete"}><Trash2 className="w-5 h-5 opacity-60 text-red-400" /></button>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -354,7 +445,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                 </div>
 
                 <div className="space-y-8 text-lg md:text-xl leading-[1.6] font-medium transition-colors duration-700" style={{ color: colors.textMain }}>
-                  <p>Hello there,</p>
+                  <p className="whitespace-pre-wrap">{selectedMail.body}</p>
                   <p>We are excited to share that your account has been successfully upgraded to the new ShooraMail environment. This transition includes all your historical data, now organized chronologically in the new Timeline view.</p>
                   <div className="p-8 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center gap-4 my-10 transition-all duration-700" style={{ borderColor: colors.border }}>
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors duration-700 ${themeMode === 'colored' ? 'bg-[#2D62ED]/10' : 'bg-blue-50'}`}>
@@ -380,6 +471,80 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
         )}
       </div>
     </div>
+
+    <AnimatePresence>
+      {isComposeOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ backgroundColor: colors.middlePaneBg }}
+          >
+            <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
+              <h3 className="font-bold" style={{ color: colors.textMain }}>New Message</h3>
+              <button onClick={() => setIsComposeOpen(false)}><X className="w-5 h-5" style={{ color: colors.textMuted }} /></button>
+            </div>
+            <div className="p-4 flex flex-col gap-4">
+               <input placeholder="To" className="w-full p-3 rounded-xl border bg-transparent outline-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }} />
+               <input placeholder="Subject" className="w-full p-3 rounded-xl border bg-transparent outline-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }} />
+               <textarea placeholder="Message" className="w-full p-3 rounded-xl border bg-transparent outline-none h-40 resize-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }}></textarea>
+               <div className="flex justify-end">
+                 <button onClick={() => {
+                   const newMsg: Message = { id: Date.now().toString(), sender: 'Me', subject: 'New Message', preview: 'This is a new message...', body: 'Content of the new message.', date: 'Just now', folder: 'sent', avatar: 'https://i.pravatar.cc/100?u=me', unread: false };
+                   setMessages([newMsg, ...messages]);
+                   setIsComposeOpen(false);
+                 }} className="px-6 py-2.5 rounded-xl font-bold text-white shadow-lg hover:scale-105 transition-all" style={{ backgroundColor: colors.primary }}>Send Message</button>
+               </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    <AnimatePresence>
+      {isDeleteWarningOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            className="w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 gap-4" style={{ backgroundColor: colors.middlePaneBg }}
+          >
+            <h3 className="text-lg font-bold" style={{ color: colors.textMain }}>Delete Permanently?</h3>
+            <p className="text-sm" style={{ color: colors.textMuted }}>This action cannot be undone. Are you sure you want to permanently delete this message?</p>
+            <div className="flex justify-end gap-3 mt-2">
+              <button onClick={() => setIsDeleteWarningOpen(false)} className="px-4 py-2 rounded-xl font-bold text-sm transition-colors hover:bg-black/5" style={{ color: colors.textMain }}>Cancel</button>
+              <button onClick={confirmDelete} className="px-4 py-2 rounded-xl font-bold text-sm text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg">Delete</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    <AnimatePresence>
+      {isLogoutWarningOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+            className="w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col p-6 gap-4" style={{ backgroundColor: colors.middlePaneBg }}
+          >
+            <h3 className="text-lg font-bold" style={{ color: colors.textMain }}>Log Out?</h3>
+            <p className="text-sm" style={{ color: colors.textMuted }}>Are you sure you want to log out of your account?</p>
+            <div className="flex justify-end gap-3 mt-2">
+              <button onClick={() => setIsLogoutWarningOpen(false)} className="px-4 py-2 rounded-xl font-bold text-sm transition-colors hover:bg-black/5" style={{ color: colors.textMain }}>Cancel</button>
+              <button onClick={confirmLogout} className="px-4 py-2 rounded-xl font-bold text-sm text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg">Log Out</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 };
 
