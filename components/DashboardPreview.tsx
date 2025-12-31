@@ -46,7 +46,7 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
       }`}></div>
 
       <MotionDiv
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y:35 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
         className={`relative rounded-[40px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] border transition-all duration-1000 overflow-hidden flex flex-col aspect-[16/10] backdrop-blur-md ${
