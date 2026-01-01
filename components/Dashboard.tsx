@@ -3,14 +3,60 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, Search, Star, Send, FileText, Trash2, Mail,
   ChevronDown, MoreHorizontal, Reply, Forward, Mails, Pin,
-  Plus, Circle, LogOut, Sun, Moon, Palette, ArrowLeft, X,
+  Plus, Circle, LogOut, Sun, Moon, Palette, ArrowLeft, X, Check, Loader2,
   Settings, Bell, Shield, HelpCircle, Inbox, RefreshCw,
   Clock, Calendar, Archive, AlertCircle, RotateCcw
 } from 'lucide-react';
 import { ThemeMode } from '../App';
 import { LogoBlack, LogoWhite } from './Logo';
+import api from '../axios';
 
 const MotionDiv = motion.div as any;
+
+const THEMES = {
+  light: {
+    sidebarBg: '#FFFFFF',
+    middlePaneBg: '#F8F9FA',
+    rightPaneBg: '#FFFFFF',
+    textMain: '#000000',
+    textMuted: '#6C757D',
+    border: '#E9ECEF',
+    itemBg: '#F8F9FA',
+    itemActiveBg: '#E3F2FD',
+    primary: '#2D62ED',
+    unread: '#FF6B6B',
+    attachmentBg: '#F1F3F4',
+    inputBg: '#F8F9FA',
+  },
+  dark: {
+    sidebarBg: '#1A1A1A',
+    middlePaneBg: '#121212',
+    rightPaneBg: '#1A1A1A',
+    textMain: '#FFFFFF',
+    textMuted: '#B0B0B0',
+    border: '#333333',
+    itemBg: '#1A1A1A',
+    itemActiveBg: '#2D2D2D',
+    primary: '#4A90E2',
+    unread: '#FF6B6B',
+    attachmentBg: '#2D2D2D',
+    inputBg: '#2D2D2D',
+  },
+  colored: {
+    sidebarBg: '#FFFFFF',
+    middlePaneBg: '#F8F9FA',
+    rightPaneBg: '#FFFFFF',
+    textMain: '#0e4c6d',
+    textMuted: '#6C757D',
+    border: '#E9ECEF',
+    itemBg: '#F8F9FA',
+    itemActiveBg: '#E3F2FD',
+    primary: '#2D62ED',
+    unread: '#FF6B6B',
+    attachmentBg: '#F1F3F4',
+    inputBg: '#F8F9FA',
+  },
+};
 
 interface ThemeColors {
   sidebarBg: string;
@@ -27,54 +73,10 @@ interface ThemeColors {
   inputBg: string;
 }
 
-const THEMES: Record<ThemeMode, ThemeColors> = {
-  light: {
-    sidebarBg: '#F1F3F5',
-    middlePaneBg: '#FFFFFF',
-    rightPaneBg: '#F8F9FA',
-    textMain: '#1A1D1F',
-    textMuted: '#6F767E',
-    border: '#E9ECEF',
-    itemBg: 'transparent',
-    itemActiveBg: '#FFFFFF',
-    primary: '#2D62ED',
-    unread: '#2D62ED',
-    attachmentBg: '#F8F9FA',
-    inputBg: '#F8F9FA',
-  },
-  dark: {
-    sidebarBg: '#0B0C0D',
-    middlePaneBg: '#131416',
-    rightPaneBg: '#1A1B1E',
-    textMain: '#ECEEF2',
-    textMuted: '#9499A1',
-    border: '#25282B',
-    itemBg: 'transparent',
-    itemActiveBg: '#25282B',
-    primary: '#4D7FFF',
-    unread: '#4D7FFF',
-    attachmentBg: '#25282B',
-    inputBg: '#1A1B1E',
-  },
-  colored: {
-    sidebarBg: '#F1F3F5',
-    middlePaneBg: '#FFFFFF',
-    rightPaneBg: '#F8F9FA',
-    textMain: '#1A1D1F',
-    textMuted: '#64748b',
-    border: '#E2E8F0',
-    itemBg: 'transparent',
-    itemActiveBg: '#FFFFFF',
-    primary: '#2D62ED',
-    unread: '#2D62ED',
-    attachmentBg: '#F1F5F9',
-    inputBg: '#F1F5F9',
-  }
-};
-
 interface Message {
   id: string;
   sender: string;
+  senderEmail: string;
   subject: string;
   preview: string;
   body: string;
@@ -90,10 +92,6 @@ interface Message {
 }
 
 const MOCK_MESSAGES: Message[] = [
-  { id: '1', folder: 'inbox', category: 'promotions', sender: 'Google', subject: 'Manual Account Verification', preview: 'Hello 7ahang, Your account has been verified successfully. Please review your security settings to ensure everything is up to date.', body: 'Hello 7ahang,\n\nYour account has been verified successfully. Please review your security settings to ensure everything is up to date.\n\nBest,\nGoogle Team', date: 'June 25', unread: true, categoryColor: '#2D62ED', avatar: 'https://i.pravatar.cc/100?u=google' },
-  { id: '2', folder: 'inbox', category: 'promotions', sender: 'Medium', subject: "Today's highlights: Design Trends 2024", preview: 'Tint and shade are areas of color theory that many beginners overlook. In this week\'s highlights, we dive deep into...', body: 'Tint and shade are areas of color theory that many beginners overlook. In this week\'s highlights, we dive deep into the nuances of color palettes in modern web design.', date: 'June 23', unread: true, categoryColor: '#2D62ED', avatar: 'https://i.pravatar.cc/100?u=medium' },
-  { id: '3', folder: 'inbox', category: 'work', sender: 'Tamas Bunce', subject: 'Work Enquiry - New Project', preview: 'This is Tamas who contacted you on Dribbble regarding the brand identity project. I was wondering if you had time for a quick call next week...', body: 'Hi,\n\nThis is Tamas who contacted you on Dribbble regarding the brand identity project. I was wondering if you had time for a quick call next week to discuss the details?\n\nThanks, Tamas', date: 'June 22', categoryColor: '#34A853', attachments: true, avatar: 'https://i.pravatar.cc/100?u=tamas' },
-  { id: '4', folder: 'inbox', category: 'personal', sender: 'Slack', subject: "Now's the perfect time to upgrade", preview: "That's okay! If you want to learn more about our new enterprise features, we've attached a full guide below...", body: "That's okay! If you want to learn more about our new enterprise features, we've attached a full guide below. Check out the new pricing plans.", date: 'June 19', flagged: true, categoryColor: '#FFB800', avatar: 'https://i.pravatar.cc/100?u=slack' }
 ];
 
 const SidebarItem: React.FC<{ icon: any; label: string; count?: number; active?: boolean; color?: string; isCollapsed: boolean; colors: ThemeColors; onClick?: () => void }> = ({ icon: Icon, label, count, active, color, isCollapsed, colors, onClick }) => (
@@ -128,12 +126,30 @@ interface DashboardProps {
   onLogout?: () => void;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  customTextColor: string;
+  customBgColor: string;
+  setCustomTextColor: (color: string) => void;
+  setCustomBgColor: (color: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode, userData }) => {
-  const initialMessages = Array.isArray(userData.inboxMails) ? userData.inboxMails : MOCK_MESSAGES;
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [selectedMailId, setSelectedMailId] = useState<string | null>(initialMessages.length > 0 ? initialMessages[0].id : null);
+const getAvatarColor = (name: string) => {
+  const colors = [
+    '#C62828', '#AD1457', '#6A1B9A', '#4527A0', '#283593',
+    '#1565C0', '#0277BD', '#00838F', '#00695C', '#2E7D32',
+    '#558B2F', '#9E9D24', '#F9A825', '#FF8F00', '#EF6C00',
+    '#D84315', '#4E342E', '#424242', '#37474F'
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode, userData, customTextColor, customBgColor, setCustomTextColor, setCustomBgColor }) => {
+  const initialMessages = MOCK_MESSAGES;
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedMailId, setSelectedMailId] = useState<string | null>(null);
   const [activeFolder, setActiveFolder] = useState<string>('inbox');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -142,9 +158,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isDeleteWarningOpen, setIsDeleteWarningOpen] = useState(false);
   const [isLogoutWarningOpen, setIsLogoutWarningOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [toasts, setToasts] = useState<{ id: string, message: string, type: 'success' | 'error' }[]>([]);
+  const [composeData, setComposeData] = useState({ to: '', subject: '', body: '' });
   const [isReloading, setIsReloading] = useState(false);
+  const [settings, setSettings] = useState({ notifications: true, autoReply: false });
+  const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tempCustomTextColor, setTempCustomTextColor] = useState(customTextColor);
+  const [tempCustomBgColor, setTempCustomBgColor] = useState(customBgColor);
 
-  const colors = THEMES[themeMode];
+  const textColors = ['#72bad5', '#0e4c6d', '#03324e', '#ef4043', '#be1e2d', '#c43240', '#ff8c00'];
+  const bgColors = ['#84e3c8', '#dcedc1', '#b6e2dd', '#FFFFFF'];
+
+  const colors = themeMode === 'colored' ? {
+    ...THEMES.colored,
+    textMain: tempCustomTextColor,
+    sidebarBg: tempCustomBgColor,
+    middlePaneBg: tempCustomBgColor,
+    rightPaneBg: tempCustomBgColor,
+    itemActiveBg: tempCustomBgColor,
+    inputBg: tempCustomBgColor,
+  } : THEMES[themeMode];
 
   useEffect(() => {
     const handleResize = () => {
@@ -159,11 +194,34 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const showToast = (message: string, type: 'success' | 'error') => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, [activeFolder]);
+
+  // Auto-save drafts
+  useEffect(() => {
+    const saveDraft = async () => {
+      if (isComposeOpen && (composeData.to || composeData.subject || composeData.body)) {
+        try {
+          await api.post('/api/save-draft', { ...composeData, email: userData.email });
+        } catch (e) { /* Silent fail for drafts */ }
+      }
+    };
+    const timer = setTimeout(saveDraft, 2000);
+    return () => clearTimeout(timer);
+  }, [composeData, isComposeOpen]);
+
   const selectedMail = messages.find(m => m.id === selectedMailId) || null;
 
   const filteredMessages = messages.filter(msg => {
     let matchesFolder = false;
-    if (activeFolder === 'inbox') matchesFolder = msg.folder === 'inbox' && !!msg.unread;
+    if (activeFolder === 'inbox') matchesFolder = msg.folder === 'inbox';
     else if (activeFolder === 'starred') matchesFolder = !!msg.flagged;
     else if (activeFolder === 'snoozed') matchesFolder = msg.folder === 'snoozed';
     else if (activeFolder === 'important') matchesFolder = !!msg.important;
@@ -187,6 +245,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     setSelectedMailId(mail.id);
     if (mail.unread) {
       setMessages(prev => prev.map(m => m.id === mail.id ? { ...m, unread: false } : m));
+      api.post('/api/mark-read', { messageId: mail.id, email: userData.email, password: localStorage.getItem('password'), read: true }).catch(() => { });
     }
   };
 
@@ -197,6 +256,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     } else {
       setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, folder: 'trash' } : m));
       setSelectedMailId(null);
+      showToast('Moved to trash', 'success');
+      api.post('/api/move-mail', { messageId: selectedMail.id, email: userData.email, password: localStorage.getItem('password'), destinationFolder: 'Trash' }).catch(() => {
+        showToast('Failed to move to trash', 'error');
+        // Revert logic could be added here
+      });
     }
   };
 
@@ -205,6 +269,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     setMessages(prev => prev.filter(m => m.id !== selectedMail.id));
     setSelectedMailId(null);
     setIsDeleteWarningOpen(false);
+    showToast('Deleted permanently', 'success');
+    api.post('/api/delete-mail', { messageId: selectedMail.id, email: userData.email, password: localStorage.getItem('password') }).catch(() => {
+      showToast('Failed to delete', 'error');
+    });
   };
 
   const confirmLogout = () => {
@@ -215,63 +283,121 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
   const handleImportant = () => {
     if (!selectedMail) return;
     setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, important: !m.important } : m));
+    api.post('/api/toggle-important', { id: selectedMail.id, important: !selectedMail.important, email: userData.email }).catch(() => { });
   };
 
   const handleRestore = () => {
     if (!selectedMail) return;
     setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, folder: 'inbox' } : m));
     setSelectedMailId(null);
+    api.post('/api/move-mail', { messageId: selectedMail.id, email: userData.email, password: localStorage.getItem('password'), destinationFolder: 'INBOX' }).catch(() => { });
   };
 
   const handleStar = () => {
     if (!selectedMail) return;
     setMessages(prev => prev.map(m => m.id === selectedMail.id ? { ...m, flagged: !m.flagged } : m));
+    api.post('/api/toggle-star', { id: selectedMail.id, flagged: !selectedMail.flagged, email: userData.email }).catch(() => { });
   };
 
-  const handleReloadInbox = async () => {
+  const fetchMessages = async () => {
     setIsReloading(true);
     try {
       const password = localStorage.getItem('password');
-      const response = await fetch('http://localhost:5000/api/inbox-fetch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: userData.email,
-          password: password || ''
-        })
-      });
+      let endpoint = '/api/inbox-fetch';
+      let payload: any = { email: userData.email, password: password || '' };
+      let currentFolder = 'inbox';
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Fetched Mails:\n\n", data.mails);
-        const fetchedMails = data.mails;
-        const mappedMessages: Message[] = fetchedMails.map((mail: any, index: number) => ({
-          id: String(index + 1),
-          sender: mail.sender || mail.from || 'Unknown Sender',
-          subject: mail.subject || '(No Subject)',
-          preview: mail.preview || mail.snippet || (mail.body ? mail.body.substring(0, 100) : ''),
-          body: mail.body || mail.text || '',
-          date: mail.date || new Date().toLocaleDateString(),
-          unread: mail.unread !== undefined ? mail.unread : true,
-          flagged: mail.flagged || false,
-          categoryColor: mail.categoryColor || '#2D62ED',
-          category: mail.category || 'personal',
-          attachments: mail.attachments || false,
-          avatar: mail.avatar || `https://i.pravatar.cc/100?u=${mail.sender || 'unknown'}`,
-          folder: 'inbox',
-          important: mail.important || false,
-        }));
+      if (['sent', 'drafts', 'trash'].includes(activeFolder)) {
+        endpoint = '/api/folder-fetch';
+        const folderMap: Record<string, string> = { sent: 'Sent', drafts: 'Drafts', trash: 'Trash' };
+        payload.folder = folderMap[activeFolder];
+        currentFolder = activeFolder;
+      }
+
+      const response = await api.post(endpoint, payload);
+      const data = response.data;
+
+      if (data.success) {
+        const rawMails = data.data.mails;
+        const fetchedMails = Array.isArray(rawMails) ? rawMails : [];
+        const mappedMessages: Message[] = fetchedMails.map((mail: any, index: number) => {
+          // Robust sender extraction to handle objects/arrays from IMAP parsers
+          let senderName = mail.sender;
+          let senderAddress = mail.senderEmail;
+
+          return {
+            id: mail.messageId || mail.id || String(index + 1),
+            sender: senderName,
+            senderEmail: senderAddress,
+            subject: typeof mail.subject === 'string' ? mail.subject : (mail.subject?.text || '(No Subject)'),
+            preview: (mail.preview || '').replace(/<[^>]*>?/gm, ''),
+            body: mail.body || '',
+            date: mail.date ? new Date(mail.date).toLocaleDateString() : new Date().toLocaleDateString(),
+            unread: Array.isArray(mail.flags) ? !mail.flags.includes('\\Seen') : true,
+            flagged: Array.isArray(mail.flags) ? mail.flags.includes('\\Flagged') : false,
+            categoryColor: '#2D62ED',
+            category: 'personal',
+            attachments: !!mail.attachments && mail.attachments.length > 0,
+            avatar: `https://i.pravatar.cc/100?u=${senderAddress}`,
+            folder: currentFolder as any,
+            important: false,
+          };
+        });
 
         userData.inboxMails = mappedMessages;
         setMessages(mappedMessages);
-        console.log("Mails reloaded successfully\n\nMapped Messages:\n\n", mappedMessages);
+        showToast(`${activeFolder} synced successfully`, 'success');
       }
     } catch (error) {
-      console.error("Failed to reload mails", error);
+      console.error("Failed to fetch mails", error);
+      showToast('Failed to sync', 'error');
     } finally {
       setIsReloading(false);
     }
   };
+
+  const handleSend = async () => {
+    if (!composeData.to || !composeData.subject || !composeData.body) {
+      showToast('Please fill all fields', 'error');
+      return;
+    }
+    setIsReloading(true);
+    try {
+      await api.post('/api/send-mail', { ...composeData, email: userData.email, password: localStorage.getItem('password') });
+      showToast('Email sent successfully', 'success');
+
+      const sentMsg: Message = {
+        id: Date.now().toString(),
+        sender: userData.userName || 'Me',
+        senderEmail: userData.email,
+        subject: composeData.subject,
+        preview: composeData.body.substring(0, 100),
+        body: composeData.body,
+        date: 'Just now',
+        folder: 'sent',
+        avatar: `https://i.pravatar.cc/100?u=${userData.email}`,
+        unread: false
+      };
+      setMessages(prev => [sentMsg, ...prev]);
+      setIsComposeOpen(false);
+      setComposeData({ to: '', subject: '', body: '' });
+    } catch (e) {
+      showToast('Failed to send email', 'error');
+    } finally {
+      setIsReloading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      await api.post('/api/settings', { email: userData.email, ...settings });
+      showToast('Settings saved', 'success');
+      setIsSettingsOpen(false);
+    } catch (e) {
+      showToast('Failed to save settings', 'error');
+    }
+  };
+
 
   const scrollbarClass = `custom-scrollbar ${themeMode !== 'light' ? 'dark-scrollbar' : ''}`;
 
@@ -289,8 +415,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
     }
 
     if (themeMode === 'colored') {
-      if (isActive) return { background: 'linear-gradient(45deg, #2D62ED, #1E40AF)', color: '#ffffff' };
-      return { background: 'transparent', color: '#2D62ED' };
+      if (isActive) return { background: customBgColor, color: customTextColor };
+      return { background: 'transparent', color: customTextColor };
     }
 
     return { background: 'transparent', color: 'inherit' };
@@ -298,6 +424,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
 
   return (
     <>
+      <style>
+        {`@import url('https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap');`}
+      </style>
       <div className={`flex h-screen w-full overflow-hidden font-sans transition-colors duration-700 ease-in-out`} style={{ backgroundColor: colors.middlePaneBg }}>
         <MotionDiv
           initial={false}
@@ -322,8 +451,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div className="flex items-center gap-2 min-w-max">
-                {themeMode === 'dark' ? <LogoWhite className="w-7 h-7" /> : <LogoBlack className="w-7 h-7" style={{ fill: themeMode === 'colored' ? '#2D62ED' : 'black' }} />}
-                <span className="text-xl font-black tracking-tighter transition-colors duration-700" style={{ color: themeMode === 'colored' ? '#2D62ED' : colors.textMain }}>ShooraMail</span>
+                {themeMode === 'dark' ? <LogoWhite className="w-7 h-7" /> : <LogoBlack className="w-7 h-7" style={{ fill: themeMode === 'colored' ? customTextColor : 'black' }} />}
+                <span className="text-xl font-black tracking-tighter transition-colors duration-700" style={{ color: colors.textMain }}>ShooraMail</span>
               </div>
             </div>
 
@@ -336,6 +465,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
               <SidebarItem icon={Calendar} label="Scheduled" count={messages.filter(m => m.folder === 'scheduled').length || undefined} active={activeFolder === 'scheduled'} onClick={() => setActiveFolder('scheduled')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
               <SidebarItem icon={FileText} label="Drafts" count={messages.filter(m => m.folder === 'drafts').length || undefined} active={activeFolder === 'drafts'} onClick={() => setActiveFolder('drafts')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
               <SidebarItem icon={Mails} label="All Mails" count={messages.filter(m => m.folder !== 'trash').length || undefined} active={activeFolder === 'all'} onClick={() => setActiveFolder('all')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+              <SidebarItem icon={Settings} label="Settings" onClick={() => setIsSettingsOpen(true)} isCollapsed={isCollapsed && !isMobile} colors={colors} />
               <SidebarItem icon={Trash2} label="Trash" count={messages.filter(m => m.folder === 'trash').length || undefined} active={activeFolder === 'trash'} onClick={() => setActiveFolder('trash')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
 
               {(!isCollapsed || isMobile) && (
@@ -351,7 +481,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                 {(['light', 'dark', 'colored'] as ThemeMode[]).map((mode) => (
                   <button
                     key={mode}
-                    onClick={() => setThemeMode(mode)}
+                    onClick={() => {
+                      if (mode === 'colored' && themeMode === 'colored') {
+                        setThemeMode('colored');
+                        setIsColorPaletteOpen(true);
+                      }
+                      else if (mode === 'colored') {
+                        setThemeMode('colored');
+
+                      } else {
+                        setThemeMode(mode);
+                      }
+                    }}
                     className={`p-2 rounded-xl flex-1 flex items-center justify-center transition-all duration-700 ${themeMode === mode ? 'shadow-lg scale-105 opacity-100' : 'opacity-60 hover:opacity-100'}`}
                     style={getToggleButtonStyles(mode)}
                   >
@@ -367,7 +508,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                 className={`border p-1 rounded-[15px] flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all duration-700 ${isCollapsed && !isMobile ? 'justify-center p-2' : ''}`}
                 style={{ backgroundColor: colors.itemActiveBg, borderColor: colors.border }}
               >
-                <img src={`https://i.pravatar.cc/100?u=${userData.email}`} className="w-10 h-10 rounded-xl flex-shrink-0" />
+                <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white text-2xl font-black" style={{ backgroundColor: getAvatarColor(userData.userName || 'User'), fontFamily: '"DynaPuff", cursive', WebkitTextStroke: '1px black', textShadow: '0px 0px 4px #ffffff80' }}>
+                  {(userData.userName || 'U').charAt(0).toUpperCase()}
+                </div>
                 {(!isCollapsed || isMobile) && (
                   <div className="flex-1 overflow-hidden transition-all duration-700">
                     <span className="text-[12px] font-black block truncate transition-colors duration-700" style={{ color: colors.textMain }}>{userData.userName}</span>
@@ -442,7 +585,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
 
             <div className="p-6 flex justify-center">
               <button
-                onClick={handleReloadInbox}
+                onClick={fetchMessages}
                 disabled={isReloading}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-sm transition-all duration-700 hover:shadow-md active:scale-95 ${isReloading ? 'opacity-60 cursor-wait' : 'hover:scale-105'}`}
                 style={{ backgroundColor: colors.itemActiveBg, color: colors.primary }}
@@ -494,13 +637,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
 
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-10 border-b pb-10 transition-colors duration-700" style={{ borderColor: colors.border }}>
                     <div className="flex items-center gap-4">
-                      <img src={selectedMail.avatar} className="w-14 h-14 rounded-2xl shadow-sm" />
+                      <div className="w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center text-white text-4xl font-black" style={{ backgroundColor: getAvatarColor(selectedMail.sender), fontFamily: '"DynaPuff", cursive', WebkitTextStroke: '1px black', textShadow: '0px 0px 4px #ffffff80' }}>
+                        {selectedMail.sender.charAt(0).toUpperCase()}
+                      </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-black text-xl transition-colors duration-700" style={{ color: colors.textMain }}>{selectedMail.sender}</p>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase transition-all duration-700 ${themeMode === 'colored' ? 'bg-[#2D62ED]/10 text-[#2D62ED]' : 'bg-black/5'}`} style={{ color: colors.textMuted }}>Verified</span>
                         </div>
-                        <p className="text-sm font-bold opacity-60 transition-colors duration-700" style={{ color: colors.textMuted }}>{selectedMail.sender.toLowerCase()}@official.com</p>
+                        <p className="text-sm font-bold opacity-60 transition-colors duration-700" style={{ color: colors.textMuted }}>{selectedMail.senderEmail.toLowerCase()}</p>
                       </div>
                     </div>
                     <div className="sm:text-right">
@@ -510,17 +655,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                   </div>
 
                   <div className="space-y-8 text-lg md:text-xl leading-[1.6] font-medium transition-colors duration-700" style={{ color: colors.textMain }}>
-                    <p className="whitespace-pre-wrap">{selectedMail.body}</p>
-                    <p>We are excited to share that your account has been successfully upgraded to the new ShooraMail environment. This transition includes all your historical data, now organized chronologically in the new Timeline view.</p>
-                    <div className="p-8 rounded-[32px] border-2 border-dashed flex flex-col items-center justify-center gap-4 my-10 transition-all duration-700" style={{ borderColor: colors.border }}>
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors duration-700 ${themeMode === 'colored' ? 'bg-[#2D62ED]/10' : 'bg-blue-50'}`}>
-                        <FileText className={`w-8 h-8 transition-colors duration-700 ${themeMode === 'colored' ? 'text-[#2D62ED]' : 'text-blue-500'}`} />
-                      </div>
-                      <p className="text-sm font-bold opacity-60 text-center transition-colors duration-700" style={{ color: colors.textMain }}>Security_Report_June_2024.pdf</p>
-                      <button className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-all duration-700 ${themeMode === 'colored' ? 'bg-[#2D62ED] text-white shadow-lg' : 'bg-black text-white'}`}>Download Report</button>
-                    </div>
-                    <p>Here's to the crazy ones. The misfits. The rebels. The troublemakers. The round pegs in the square holes. The ones who see things differently. They’re not fond of rules. And they have no respect for the status quo. You can quote them, disagree with them, glorify or vilify them. About the only thing you can’t do is ignore them.</p>
-                    <p>Best regards,<br /><span className="font-black">The ShooraMail Team</span></p>
+                    {HTMLInputElement ? (
+                      <div dangerouslySetInnerHTML={{ __html: selectedMail.body }}></div>
+                    ) : (
+                      <p>{selectedMail.body}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -535,6 +674,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
             </div>
           )}
         </div>
+      </div>
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+        <AnimatePresence>
+          {toasts.map(toast => (
+            <motion.div
+              key={toast.id} initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+              className={`px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-bold backdrop-blur-md border ${toast.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-600' : 'bg-red-500/10 border-red-500/20 text-red-600'}`}
+            >
+              {toast.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              {toast.message}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>
@@ -552,16 +706,61 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                 <button onClick={() => setIsComposeOpen(false)}><X className="w-5 h-5" style={{ color: colors.textMuted }} /></button>
               </div>
               <div className="p-4 flex flex-col gap-4">
-                <input placeholder="To" className="w-full p-3 rounded-xl border bg-transparent outline-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }} />
-                <input placeholder="Subject" className="w-full p-3 rounded-xl border bg-transparent outline-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }} />
-                <textarea placeholder="Message" className="w-full p-3 rounded-xl border bg-transparent outline-none h-40 resize-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }}></textarea>
+                <input value={composeData.to} onChange={e => setComposeData({ ...composeData, to: e.target.value })} placeholder="To" className="w-full p-3 rounded-xl border bg-transparent outline-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }} />
+                <input value={composeData.subject} onChange={e => setComposeData({ ...composeData, subject: e.target.value })} placeholder="Subject" className="w-full p-3 rounded-xl border bg-transparent outline-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }} />
+                <textarea value={composeData.body} onChange={e => setComposeData({ ...composeData, body: e.target.value })} placeholder="Message" className="w-full p-3 rounded-xl border bg-transparent outline-none h-40 resize-none transition-colors" style={{ borderColor: colors.border, color: colors.textMain }}></textarea>
                 <div className="flex justify-end">
-                  <button onClick={() => {
-                    const newMsg: Message = { id: Date.now().toString(), sender: 'Me', subject: 'New Message', preview: 'This is a new message...', body: 'Content of the new message.', date: 'Just now', folder: 'sent', avatar: 'https://i.pravatar.cc/100?u=me', unread: false };
-                    setMessages([newMsg, ...messages]);
-                    setIsComposeOpen(false);
-                  }} className="px-6 py-2.5 rounded-xl font-bold text-white shadow-lg hover:scale-105 transition-all" style={{ backgroundColor: colors.primary }}>Send Message</button>
+                  <button onClick={handleSend} disabled={isReloading} className="px-6 py-2.5 rounded-xl font-bold text-white shadow-lg hover:scale-105 transition-all flex items-center gap-2" style={{ backgroundColor: colors.primary }}>
+                    {isReloading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Send Message
+                  </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ backgroundColor: colors.middlePaneBg }}
+            >
+              <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
+                <h3 className="font-bold" style={{ color: colors.textMain }}>Settings</h3>
+                <button onClick={() => setIsSettingsOpen(false)}><X className="w-5 h-5" style={{ color: colors.textMuted }} /></button>
+              </div>
+              <div className="p-6 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold" style={{ color: colors.textMain }}>Email Signature</span>
+                  <button className="text-xs font-bold px-3 py-1 rounded-full bg-black/5" style={{ color: colors.primary }}>Edit</button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold" style={{ color: colors.textMain }}>Notifications</span>
+                  <button
+                    onClick={() => setSettings(s => ({ ...s, notifications: !s.notifications }))}
+                    className={`w-10 h-6 rounded-full relative transition-colors ${settings.notifications ? 'bg-green-500' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${settings.notifications ? 'right-1' : 'left-1'}`}></div>
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold" style={{ color: colors.textMain }}>Auto-Reply</span>
+                  <button
+                    onClick={() => setSettings(s => ({ ...s, autoReply: !s.autoReply }))}
+                    className={`w-10 h-6 rounded-full relative transition-colors ${settings.autoReply ? 'bg-green-500' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${settings.autoReply ? 'right-1' : 'left-1'}`}></div>
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 border-t bg-black/5 flex justify-end" style={{ borderColor: colors.border }}>
+                <button onClick={handleSaveSettings} className="px-6 py-2 rounded-xl font-bold text-white shadow-lg" style={{ backgroundColor: colors.primary }}>Save Changes</button>
               </div>
             </motion.div>
           </motion.div>
@@ -604,6 +803,55 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
               <div className="flex justify-end gap-3 mt-2">
                 <button onClick={() => setIsLogoutWarningOpen(false)} className="px-4 py-2 rounded-xl font-bold text-sm transition-colors hover:bg-black/5" style={{ color: colors.textMain }}>Cancel</button>
                 <button onClick={confirmLogout} className="px-4 py-2 rounded-xl font-bold text-sm text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg">Log Out</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isColorPaletteOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ backgroundColor: colors.middlePaneBg }}
+            >
+              <div className="p-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
+                <h3 className="font-bold" style={{ color: colors.textMain }}>Customize Colors</h3>
+                <button onClick={() => setIsColorPaletteOpen(false)}><X className="w-5 h-5" style={{ color: colors.textMuted }} /></button>
+              </div>
+              <div className="p-6 flex flex-col gap-6">
+                <div>
+                  <h4 className="font-bold mb-3" style={{ color: colors.textMain }}>Text Color</h4>
+                  <div className="grid grid-cols-7 gap-2">
+                    {textColors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setTempCustomTextColor(color)}
+                        className="w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
+                        style={{ backgroundColor: color, borderColor: tempCustomTextColor === color ? colors.primary : colors.border }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-bold mb-3" style={{ color: colors.textMain }}>Background Color</h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {bgColors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setTempCustomBgColor(color)}
+                        className="w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
+                        style={{ backgroundColor: color, borderColor: tempCustomBgColor === color ? colors.primary : colors.border }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 border-t flex justify-end" style={{ borderColor: colors.border }}>
               </div>
             </motion.div>
           </motion.div>

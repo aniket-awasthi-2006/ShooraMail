@@ -16,9 +16,11 @@ interface UserData {
 interface AuthPageProps {
   onNavigate: (v: View, data?: UserData) => void;
   themeMode: ThemeMode;
+  customTextColor?: string;
+  customBgColor?: string;
 }
 
-const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, themeMode }) => {
+const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, themeMode, customTextColor, customBgColor }) => {
   const isLight = themeMode === 'light';
   const isColored = themeMode === 'colored';
   const isDark = themeMode === 'dark';
@@ -104,14 +106,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, themeMode }) => {
           }`}
       >
         <div className="flex justify-center">
-          <div className={`w-12 h-12 p-2 rounded-2xl flex items-center justify-center transition-all duration-700 ${isColored ? 'bg-[#2D62ED]/10' :
+          <div className={`w-12 h-12 p-2 rounded-2xl flex items-center justify-center transition-all duration-700 ${isColored ? `bg-[${customBgColor}]/10` :
             isLight ? 'bg-black/5' :
               'bg-white/10'
             }`}>
             {isDark ? (
               <LogoWhite className="w-full h-full" />
             ) : (
-              <LogoBlack className="w-full h-full" style={{ fill: isColored ? '#2D62ED' : 'black' }} />
+              <LogoBlack className="w-full h-full" style={{ fill: isColored ? customTextColor : 'black' }} />
             )}
           </div>
         </div>

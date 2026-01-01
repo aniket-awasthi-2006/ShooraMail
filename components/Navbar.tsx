@@ -12,9 +12,11 @@ interface NavbarProps {
   currentView: View;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  customTextColor?: string;
+  customBgColor?: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView, themeMode, setThemeMode }) => {
+const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView, themeMode, setThemeMode, customTextColor, customBgColor }) => {
   const [clickHistory, setClickHistory] = useState<number[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [password, setPassword] = useState('');
@@ -68,13 +70,15 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView, themeMode, set
             ) : (
               <LogoBlack
                 className="w-8 h-8 md:w-9 md:h-9 transition-transform group-hover:-rotate-6"
-                style={{ fill: isColored ? '#2D62ED' : 'black' }}
+                style={{ fill: isColored ? customTextColor : 'black' }}
               />
             )}
             <span className={`font-black text-lg md:text-xl tracking-tighter transition-colors duration-700 ${isDark ? 'text-white' :
-              isColored ? 'text-[#2D62ED]' :
+              isColored ? '' :
                 'text-black'
-              }`}>ShooraMail</span>
+              }`}
+              style={isColored ? { color: customTextColor } : {}}
+            >ShooraMail</span>
           </div>
 
           {/* Right: Actions */}
@@ -92,9 +96,10 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView, themeMode, set
             <button
               onClick={() => onNavigate('signin')}
               className={`px-5 md:px-7 py-2.5 md:py-3 rounded-full text-[12px] md:text-xs font-black tracking-widest flex items-center gap-2 transition-all duration-700 shadow-xl group ${isDark ? 'bg-white text-black hover:bg-gray-100' :
-                isColored ? 'bg-[#2D62ED] text-white hover:bg-blue-700' :
+                isColored ? '' :
                   'bg-black text-white hover:bg-gray-900'
                 }`}
+              style={isColored ? { backgroundColor: customTextColor, color: 'white' } : {}}
             >
               Continue to LogIn
               <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />

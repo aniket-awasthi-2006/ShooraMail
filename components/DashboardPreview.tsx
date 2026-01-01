@@ -41,17 +41,15 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
   return (
     <div className="w-full relative group cursor-pointer" onClick={onOpenApp}>
       {/* Background Ambient Glow */}
-      <div className={`absolute -inset-16 rounded-[100px] blur-[120px] opacity-10 group-hover:opacity-25 transition-all duration-1000 pointer-events-none ${
-        isNormalMode ? 'bg-blue-500' : 'bg-indigo-600'
-      }`}></div>
+      <div className={`absolute -inset-16 rounded-[100px] blur-[120px] opacity-10 group-hover:opacity-25 transition-all duration-1000 pointer-events-none ${isNormalMode ? 'bg-blue-500' : 'bg-indigo-600'
+        }`}></div>
 
       <MotionDiv
-        initial={{ opacity: 0, y:35 }}
+        initial={{ opacity: 0, y: 35 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-        className={`relative rounded-[40px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] border transition-all duration-1000 overflow-hidden flex flex-col aspect-[16/10] backdrop-blur-md ${
-          isNormalMode ? 'bg-white/90 border-gray-200/80' : 'bg-[#0B0C0D]/90 border-white/5'
-        }`}
+        className={`relative rounded-[40px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] border transition-all duration-1000 overflow-hidden flex flex-col aspect-[16/10] backdrop-blur-md ${isNormalMode ? 'bg-white/90 border-gray-200/80' : 'bg-[#0B0C0D]/90 border-white/5'
+          }`}
       >
         <div className="relative w-full h-full flex-1">
           <AnimatePresence mode="popLayout">
@@ -60,20 +58,19 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
               initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ 
+              transition={{
                 duration: 2.5, // Ultra-smooth long transition
-                ease: [0.4, 0, 0.2, 1] 
+                ease: [0.4, 0, 0.2, 1]
               }}
               className="absolute inset-0 w-full h-full"
             >
               <div className="w-full h-full relative">
                 {/* Visual Consistency Filter */}
-                <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-1000 ${
-                  themeMode === 'dark' ? 'bg-black/20' : 'bg-transparent'
-                }`}></div>
+                <div className={`absolute inset-0 z-10 pointer-events-none transition-opacity duration-1000 ${themeMode === 'dark' ? 'bg-black/20' : 'bg-transparent'
+                  }`}></div>
 
                 <img
-                  src={localImages[index]}              
+                  src={localImages[index]}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -91,11 +88,10 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
         {/* Dynamic Progress Timeline (Bottom) */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-4">
           {[0, 1, 2].map((i) => (
-            <div 
+            <div
               key={i}
-              className={`h-1 rounded-full overflow-hidden transition-all duration-700 bg-white/10 ${
-                index === i ? 'w-24' : 'w-8'
-              }`}
+              className={`h-1 rounded-full overflow-hidden transition-all duration-700 bg-white/10 ${index === i ? 'w-24' : 'w-8'
+                }`}
             >
               {index === i && (
                 <MotionDiv
@@ -110,12 +106,18 @@ const DashboardPreview: React.FC<DashboardPreviewProps> = ({ onOpenApp, themeMod
         </div>
       </MotionDiv>
 
-      {/* Floating Exploration Hint */}
+      {/* Floating Exploration Hint - Text with Gradient */}
       <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-12 py-5 rounded-full text-[12px] font-black tracking-[0.4em] uppercase shadow-2xl z-30 opacity-0 group-hover:opacity-100 translate-y-6 group-hover:translate-y-0 transition-all duration-1000 pointer-events-none whitespace-nowrap ${
-        themeMode === 'colored' ? 'bg-[#2D62ED] text-white' : 
-        themeMode === 'dark' ? 'bg-white text-black' : 
-        'bg-black text-white'
-      }`}>
+        // Button background color
+        themeMode === 'colored' ? 'bg-[#2D62ED]' :
+          themeMode === 'dark' ? 'bg-white' :
+            'bg-black'
+        } ${
+        // Text gradient color
+        isNormalMode // Applies to 'light' and 'colored' themes
+          ? 'bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent'
+          : 'bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent' // Applies to 'dark' theme
+        }`}>
         Launch Full Experience
       </div>
     </div>

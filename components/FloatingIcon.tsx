@@ -8,11 +8,13 @@ interface FloatingIconProps {
   delay?: number;
   className?: string;
   themeMode?: ThemeMode;
+  customTextColor?: string;
+  customBgColor?: string;
 }
 
 const MotionDiv = motion.div as any;
 
-const FloatingIcon: React.FC<FloatingIconProps> = ({ icon: Icon, delay = 0, className = "", themeMode = 'light' }) => {
+const FloatingIcon: React.FC<FloatingIconProps> = ({ icon: Icon, delay = 0, className = "", themeMode = 'light', customTextColor, customBgColor }) => {
   const isLight = themeMode === 'light';
   const isColored = themeMode === 'colored';
 
@@ -28,11 +30,12 @@ const FloatingIcon: React.FC<FloatingIconProps> = ({ icon: Icon, delay = 0, clas
       }}
       className={`absolute ${className} z-10`}
     >
-      <div className={`p-4 rounded-2xl shadow-xl border transition-all duration-700 flex items-center justify-center hover:scale-110 cursor-default ${
-        isLight ? 'bg-white border-gray-100 text-gray-800' : 
-        themeMode === 'dark' ? 'bg-[#131416] border-[#25282B] text-gray-200' : 
-        'bg-[#2D62ED] border-white/20 text-white shadow-[#2D62ED]/20'
-      }`}>
+      <div className={`p-4 rounded-2xl shadow-xl border transition-all duration-700 flex items-center justify-center hover:scale-110 cursor-default ${isLight ? 'bg-white border-gray-100 text-gray-800' :
+          themeMode === 'dark' ? 'bg-[#131416] border-[#25282B] text-gray-200' :
+            ''
+        }`}
+        style={isColored ? { backgroundColor: customTextColor, borderColor: 'rgba(255,255,255,0.2)', color: 'white', boxShadow: `0 25px 50px -12px ${customTextColor}20` } : {}}
+      >
         <Icon className="w-6 h-6" strokeWidth={1.5} />
       </div>
     </MotionDiv>
