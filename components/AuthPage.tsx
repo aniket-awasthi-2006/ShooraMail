@@ -25,7 +25,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, themeMode, customTextCo
   const isColored = themeMode === 'colored';
   const isDark = themeMode === 'dark';
   const isNormalMode = isLight || isColored;
-
+  var textColor = isColored && customTextColor ? customTextColor : '#2D62ED';
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -119,7 +119,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, themeMode, customTextCo
         </div>
 
         <div className="text-center flex flex-col gap-2">
-          <h2 className={`text-3xl font-black tracking-tighter transition-colors ${isColored ? 'text-[#2D62ED]' : ''}`}>
+          <h2 className={`text-3xl font-black tracking-tighter transition-colors`} style={{ color: isColored ? customTextColor : isLight ? '#000000' : '#FFFFFF' }}
+          >
             Welcome back.
           </h2>
           <p className="opacity-60 text-sm font-medium">
@@ -171,10 +172,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ onNavigate, themeMode, customTextCo
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-4 mt-2 rounded-full font-bold shadow-xl transition-all duration-700 flex items-center justify-center gap-2 transform active:scale-95 ${isColored ? 'bg-[#2D62ED] text-white hover:bg-blue-700' :
-              isLight ? 'bg-black text-white hover:bg-gray-800' :
-                'bg-white text-black hover:bg-gray-100'
-              } ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full py-4 mt-2 rounded-full font-bold shadow-xl transition-all duration-700 flex items-center justify-center gap-2 transform active:scale-95`}
+
+            style={{
+              backgroundColor: isColored ? textColor : isLight ? '#000000' : '#FFFFFF',
+              color: isColored ? '#FFFFFF' : isLight ? '#FFFFFF' : '#000000',
+              opacity: isLoading ? 0.7 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer'
+            }}
           >
             {isLoading ? 'Processing...' : 'Sign In'}
             <ArrowRight className="w-4 h-4" />

@@ -307,11 +307,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
       let payload: any = { email: userData.email, password: password || '' };
       let currentFolder = 'inbox';
 
-      if (['sent', 'drafts', 'trash'].includes(activeFolder)) {
+      // Use folder-fetch for specific IMAP folders
+      const specificFolders = ['sent', 'drafts', 'trash', 'snoozed', 'scheduled'];
+      if (specificFolders.includes(activeFolder)) {
         endpoint = '/api/folder-fetch';
-        const folderMap: Record<string, string> = { sent: 'Sent', drafts: 'Drafts', trash: 'Trash' };
+        const folderMap: Record<string, string> = {
+          sent: 'Sent',
+          drafts: 'Drafts',
+          trash: 'Trash',
+          snoozed: 'Snoozed',
+          scheduled: 'Scheduled'
+        };
         payload.folder = folderMap[activeFolder];
         currentFolder = activeFolder;
+      } else {
+        // For inbox, all, starred, important, categories - fetch all and filter client-side
+        currentFolder = activeFolder === 'all' ? 'inbox' : activeFolder;
       }
 
       const response = await api.post(endpoint, payload);
@@ -320,10 +331,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
       if (data.success) {
         const rawMails = data.data.mails;
         const fetchedMails = Array.isArray(rawMails) ? rawMails : [];
+        const categories = ['work', 'personal', 'promotions'];
+
         const mappedMessages: Message[] = fetchedMails.map((mail: any, index: number) => {
           // Robust sender extraction to handle objects/arrays from IMAP parsers
           let senderName = mail.sender;
           let senderAddress = mail.senderEmail;
+
+          // Assign category randomly for demo purposes
+          const assignedCategory = categories[index % categories.length];
 
           return {
             id: mail.messageId || mail.id || String(index + 1),
@@ -336,11 +352,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
             unread: Array.isArray(mail.flags) ? !mail.flags.includes('\\Seen') : true,
             flagged: Array.isArray(mail.flags) ? mail.flags.includes('\\Flagged') : false,
             categoryColor: '#2D62ED',
-            category: 'personal',
+            category: assignedCategory,
             attachments: !!mail.attachments && mail.attachments.length > 0,
             avatar: `https://i.pravatar.cc/100?u=${senderAddress}`,
             folder: currentFolder as any,
-            important: false,
+            important: false, // Could be set based on some logic or randomly for demo
           };
         });
 
@@ -451,13 +467,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div className="flex items-center gap-2 min-w-max">
-                {themeMode === 'dark' ? <LogoWhite className="w-7 h-7" /> : <LogoBlack className="w-7 h-7" style={{ fill: themeMode === 'colored' ? customTextColor : 'black' }} />}
+                {themeMode === 'dark' ? <LogoWhite className="w-7 h-7" style={{ fill: colors.textMain }} /> : <LogoBlack className="w-7 h-7" style={{ fill: colors.textMain }} />}
                 <span className="text-xl font-black tracking-tighter transition-colors duration-700" style={{ color: colors.textMain }}>ShooraMail</span>
               </div>
             </div>
 
             <div className={`flex flex-col gap-1 overflow-y-auto ${scrollbarClass} flex-grow`}>
-              <SidebarItem icon={Inbox} label="Inbox" count={messages.filter(m => m.folder === 'inbox' && m.unread).length || undefined} active={activeFolder === 'inbox'} onClick={() => setActiveFolder('inbox')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
+              <SidebarItem icon={Inbox} label="Inbox" count={messages.filter(m => m.folder === 'inbox' && m.flagged).length || undefined} active={activeFolder === 'inbox'} onClick={() => setActiveFolder('inbox')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
               <SidebarItem icon={Star} label="Starred" count={messages.filter(m => m.flagged).length || undefined} active={activeFolder === 'starred'} onClick={() => setActiveFolder('starred')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
               <SidebarItem icon={Clock} label="Snoozed" count={messages.filter(m => m.folder === 'snoozed').length || undefined} active={activeFolder === 'snoozed'} onClick={() => setActiveFolder('snoozed')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
               <SidebarItem icon={Pin} label="Important" count={messages.filter(m => m.important).length || undefined} active={activeFolder === 'important'} onClick={() => setActiveFolder('important')} isCollapsed={isCollapsed && !isMobile} colors={colors} />
@@ -655,7 +671,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, themeMode, setThemeMode
                   </div>
 
                   <div className="space-y-8 text-lg md:text-xl leading-[1.6] font-medium transition-colors duration-700" style={{ color: colors.textMain }}>
-                    {HTMLInputElement ? (
+                    {selectedMail.body.includes('<') ? (
                       <div dangerouslySetInnerHTML={{ __html: selectedMail.body }}></div>
                     ) : (
                       <p>{selectedMail.body}</p>
